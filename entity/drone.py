@@ -1,4 +1,5 @@
 import numpy as np
+from entity.antenna import Antenna
 import scipy
 
 
@@ -8,6 +9,7 @@ class Drone:
         self.y = y
         self.z = z
         self.speed_per_tact = speed
+        self.antenna = Antenna()
         self.isMoving = False
         self.goal_x = x
         self.goal_y = y
@@ -32,6 +34,3 @@ class Drone:
             # Если дрон долетел - останавливаем его
             if np.fabs(self.goal_x - self.x) + np.fabs(self.goal_y - self.y) + np.fabs(self.goal_z - self.z) < 3 * self.speed_per_tact:
                 self.isMoving = False
-
-
-
