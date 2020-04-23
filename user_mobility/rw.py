@@ -2,11 +2,11 @@
 
 
 class RandomWalk:
-    def __init__(self):
-        self.a = 1
+    def __init__(self, parameters):
+        self.parameters = parameters
 
-    def initialization(self):
-        return self.a
+    def generate_users(self):
+        return self.parameters
 
-    def simulation(self):
-        return self.a
+    def update_simulation_step(self):
+        return self.parameters

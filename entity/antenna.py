@@ -31,13 +31,12 @@ class Antenna:
     https://www.pasternack.com/t-calculator-friis.aspx
     """
 
-    def __init__(self, transmit_power, transmission_bandwidth, carrier_frequency,
-                 receive_antenna_gain, transmit_antenna_gain):
-        self.transmit_power = transmit_power
-        self.transmission_bandwidth = transmission_bandwidth
-        self.carrier_frequency = carrier_frequency
-        self.receive_antenna_gain = receive_antenna_gain
-        self.transmit_antenna_gain = transmit_antenna_gain
+    def __init__(self, parameters):
+        self.transmit_power = parameters['transmit_power']
+        self.transmission_bandwidth = parameters['transmission_bandwidth']
+        self.carrier_frequency = parameters['carrier_frequency']
+        self.receive_antenna_gain = parameters['receive_antenna_gain']
+        self.transmit_antenna_gain = parameters['transmit_antenna_gain']
         self.noise_power = -174 + 10 * np.log10(self.transmission_bandwidth)
         self.light_speed = 300_000_000  # m/s
 
@@ -49,7 +48,8 @@ class Antenna:
         Parameters: distance - distance [meters] in 3D space between user and drone
         Results: Received power in dBm
         """
-        return self.transmit_power + self.receive_antenna_gain + self.transmit_antenna_gain + 20 * np.log10(self.light_speed / (4 * np.pi * distance * self.carrier_frequency))
+        log_num = 20 * np.log10(self.light_speed / (4 * np.pi * distance * self.carrier_frequency))
+        return self.transmit_power + self.receive_antenna_gain + self.transmit_antenna_gain + log_num
 
     def calculate_snr(self, distance):
         """
@@ -77,4 +77,8 @@ class Antenna:
         received_power_w = noise_power_w * 10 ** (snr_threshold / 10)
         received_power = watt2dbm(received_power_w)
 
-        return self.light_speed / (4 * np.pi * self.carrier_frequency * 10 ** ((received_power - self.transmit_power - self.receive_antenna_gain - self.transmit_antenna_gain) / 20))
+        sum_log = received_power - self.transmit_power - self.receive_antenna_gain - self.transmit_antenna_gain
+        return self.light_speed / (4 * np.pi * self.carrier_frequency * 10 ** (sum_log / 20))
+
+    def change_transmit_power(self, new_transmit_power):
+        self.transmit_power = new_transmit_power

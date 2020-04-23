@@ -1,61 +1,31 @@
 import numpy as np
-import scipy
-import matplotlib.pyplot as plt
-from entity.drone import Drone
-from entity.antenna import Antenna
-from entity.group import Group
 from user_control import UserControl
-from visualization_3d import Visualization
-from user_mobility.rw import RandomWalk
-from user_mobility.rdm import RandomDirectionMobility
 from user_mobility.rpgm import ReferencePointGroupMobility
-
-
-class SweetDrones:
-    def __init__(self, user_mobility, parameters):
-        self.parameters = parameters
-        self.simulation_time = parameters['max_simulation_time']
-        self.delta_t = parameters['delta_t']
-        self.drone_t_upd = parameters['drone_t_upd']
-        self.total_time_steps = int(self.simulation_time / self.delta_t)
-        self.users = np.array([])
-        self.drones = np.array([])
-        self.user_mobility = user_mobility
-
-    def start(self):
-        control = UserControl(self.user_mobility, self.parameters)
-        control.initialization()
-        self.users = control.simulation()
-        # self.users = UserControl(self.user_mobility, self.parameters).initialization()
-        print(np.shape(self.users))
-        # for time_step in range(self.total_time_steps):
-        #     print(1)
-
-    def visualize(self, save=True):
-        visual = Visualization(self.users, self.drones)
-        visual.start(save=save)
-
+from drone_control import DroneControl
+from drone_navigation.pso import PSO
+from drone_navigation.k_means import KMeans
+from visualization_3d import Visualization
 
 # Initial data for simulation
-basic_parameters = {
+simulation_params = {
     'area_x': 100,  # meters
     'area_y': 100,  # meters
-    'max_simulation_time': 60,  # s
+    'max_simulation_time': 300,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
     'drone_t_upd': 5.0,  # seconds
 
     # Initial data for users
     'users_number': 100,  # number
-    'groups_number': 5,  # number
-    'groups_limits': [20, 20, 20, 20, 20],  # array of numbers | SUM MUST BE EQUAL TO USERS NUMBER!!! LEN OF ARRAY MUST BE EQUAL TO GROUPS NUMBER!!!
+    'groups_number': 4,  # number
+    'groups_limits': [8, 15, 25, 52],  # array of numbers
     'users_speed': 1.4,  # m/s
     'users_height': 2,  # m
     'r_max_k': 1.3,
 
     # Initial data for drones
     'drones_number': 3,  # number
-    'drones_speed': 5,  # m/s
+    'drones_speed': [5, 5, 5],  # m/s
     'drones_height': 20,  # m
 
     # Initial data for antenna
@@ -67,21 +37,54 @@ basic_parameters = {
 }
 
 
+class DronesProject:
+    def __init__(self, parameters):
+        self.parameters = parameters
+        self.simulation_time = parameters['max_simulation_time']
+        self.delta_t = parameters['delta_t']
+        self.drone_t_upd = parameters['drone_t_upd']
+        self.total_time_steps = int(self.simulation_time / self.delta_t)
+        self.users = np.array([])
+        self.drones = np.array([])
+        self.groups = np.array([])
+        self.drones_paths = np.array([])
+        self.additional_lines = np.array([])
+        self.user_mobility = ReferencePointGroupMobility
+
+    def start(self, pso, kmeans):
+        user_control = UserControl(self.user_mobility, self.parameters)
+        self.users = user_control.simulation()
+        self.groups = user_control.get_groups()
+
+        if pso:
+            drone_control = DroneControl(PSO, self.users, self.parameters)
+            self.drones = drone_control.simulation()
+            self.drones_paths = drone_control.get_paths()
+        if kmeans:
+            drone_control = DroneControl(KMeans, self.users, self.parameters)
+            self.drones = drone_control.simulation()
+            self.drones_paths = drone_control.get_paths()
+
+    def visualize(self, save=True):
+        visual = Visualization(
+            users=self.users,
+            drones=self.drones,
+            groups=self.groups,
+            drones_paths=self.drones_paths,
+            additional_lines=self.additional_lines,
+            parameters=self.parameters
+        )
+        visual.start(save=save)
+
+
 def main():
-    simulation = SweetDrones(ReferencePointGroupMobility, basic_parameters)
-    simulation.start()
-    simulation.visualize(save=False)
-    # num = 600
-    # users_x = np.random.uniform(0, 100, size=(num, 100))
-    # users_y = np.random.uniform(0, 100, size=(num, 100))
-    # users_z = np.random.uniform(0, 3, size=(num, 100))
-    # users = np.dstack([users_x, users_y, users_z])
-    # drones_x = np.random.uniform(0, 100, size=(num, 10))
-    # drones_y = np.random.uniform(0, 100, size=(num, 10))
-    # drones_z = np.random.uniform(20, 25, size=(num, 10))
-    # drones = np.dstack([drones_x, drones_y, drones_z])
-    # visual = Visualization(users, drones)
-    # visual.start(save=True)
+    pso = False
+    kmeans = True
+    visual = True if pso ^ kmeans else False
+    simulation = DronesProject(simulation_params)
+    simulation.start(pso=pso, kmeans=kmeans)
+    if visual:
+        simulation.visualize(save=False)
 
 
 if __name__ == '__main__':

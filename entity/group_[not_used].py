@@ -67,10 +67,13 @@ class Group:
         users_dz = self.speed * self.delta_t * np.cos(beta)
         self.users += np.dstack([users_dx, users_dy, users_dz])[0]
         self.group_move_time -= self.delta_t
+
+
         if self.group_move_time <= 0:
             self.group_move_time = np.array([np.random.exponential(1 / np.mean(self.group_move_time_history))])
             self.group_move_time_history = np.concatenate((self.group_move_time_history, self.group_move_time))
             self.update_goals()
+
 
     def get_users(self):
         return self.users
