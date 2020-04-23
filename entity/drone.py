@@ -55,3 +55,6 @@ class Drone:
 
     def get_antenna_distance(self, snr_threshold):
         return self.antenna.get_distance_on_snr(snr_threshold)
+
+    def calculate_snr(self):
+        return self.antenna.get_distance_on_snr(snr_threshold)

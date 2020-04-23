@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.spatial
 from entity.drone import Drone
+from entity.antenna import Antenna
 
 
 class DroneControl:
@@ -14,19 +15,25 @@ class DroneControl:
         self.drone_t_upd = params['drone_t_upd']
         self.t_upd_in_time_steps = int(self.drone_t_upd / self.delta_t)
         self.drones_number = params['drones_number']
+        self.default_antenna = Antenna(params)
         self.users = users
         self.drones = np.array([])
         self.drones_coordinates = np.array([])
         self.drones_history = np.array([])
         self.goals_history = np.array([])
+        self.diagrams = np.array([])
+        self.diagrams_history = np.array([])
+        self.coverage = []
 
     def simulation(self):
         # Генерация координат дронов согласно выбранной mobility для момента t0 (initial)
         self.drones = [Drone(0, 0, 0, d, self.params) for d in range(self.drones_number)]
-        drones_coordinates = self.mobility.generate_new_positions(self.drones, self.users[0])
+        drones_coordinates, self.diagrams = self.mobility.generate_new_positions(self.drones, self.users[0])
         [self.drones[d].set_position(x, y, z) for d, [x, y, z] in zip(range(self.drones_number), drones_coordinates)]
         self.drones_history = np.expand_dims(np.copy(drones_coordinates), axis=0)
+        self.diagrams_history = np.expand_dims(np.copy(self.diagrams), axis=0)
         self.goals_history = np.expand_dims(np.copy(self.get_goals()), axis=0)
+        self.coverage.append(self.coverage_probability(self.users[0], drones_coordinates))
         # Симуляция дронов на каждом шаге и сохранение в историю
         for time_step in range(1, self.total_time_steps):
 
@@ -38,8 +45,11 @@ class DroneControl:
 
             # Обновляем дронов + сохраняем их координаты в "историю"
             current_coordinates = self.update_drones()
+            self.coverage.append(self.coverage_probability(self.users[time_step], current_coordinates))
             self.goals_history = np.concatenate((self.goals_history, np.expand_dims(self.get_goals(), axis=0)))
             self.drones_history = np.concatenate((self.drones_history, np.expand_dims(current_coordinates, axis=0)))
+            self.diagrams_history = np.concatenate((self.diagrams_history, np.expand_dims(self.diagrams, axis=0)))
+
         return self.drones_history
 
     def update_drones(self):
@@ -59,7 +69,7 @@ class DroneControl:
     def update_goals_in_t_upd_interval(self, time_step):
         if not time_step % self.t_upd_in_time_steps:
             # определяем новые позиции дронов и обновляем цели дронов
-            new_coordinates = self.mobility.generate_new_positions(self.drones, self.users[time_step])
+            new_coordinates, self.diagrams = self.mobility.generate_new_positions(self.drones, self.users[time_step])
             self.update_drones_goals(new_coordinates)
 
     def update_goals_when_all_arrived(self, time_step):
@@ -70,6 +80,24 @@ class DroneControl:
 
     def get_paths(self):
         return self.goals_history
+
+    def get_diagrams(self):
+        return self.diagrams_history
+
+    def get_coverage(self):
+        return np.array(self.coverage)
+
+    def coverage_probability(self, users, drones):
+        """
+        Считаем Coverage Probability для конкретного момента времени: подаем список пользователей
+        и список дронов в момент времени t, t>0, на выходе имеем число подключенных юзеров
+        """
+        # Calculate distances between each user and nearest drone
+        distance = scipy.spatial.distance.cdist(users, drones)
+        min_distances = np.min(distance, axis=1)
+        min_distances_indexes = np.argmin(distance, axis=1)
+        common_snr = self.default_antenna.calculate_snr(min_distances)
+        return len(users[common_snr > self.params['snr_threshold']]) / len(users) * 100
 
     def minor_matrix(self, arr, i, j):
         return arr[np.array(list(range(i)) + list(range(i + 1, arr.shape[0])))[:, np.newaxis],

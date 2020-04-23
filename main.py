@@ -10,7 +10,7 @@ from visualization_3d import Visualization
 simulation_params = {
     'area_x': 100,  # meters
     'area_y': 100,  # meters
-    'max_simulation_time': 300,  # s
+    'max_simulation_time': 60,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
     'drone_t_upd': 5.0,  # seconds
@@ -48,7 +48,8 @@ class DronesProject:
         self.drones = np.array([])
         self.groups = np.array([])
         self.drones_paths = np.array([])
-        self.additional_lines = np.array([])
+        self.drones_diagrams = np.array([])
+        self.coverage = np.array([])
         self.user_mobility = ReferencePointGroupMobility
 
     def start(self, pso, kmeans):
@@ -64,6 +65,8 @@ class DronesProject:
             drone_control = DroneControl(KMeans, self.users, self.parameters)
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
+            self.drones_diagrams = drone_control.get_diagrams()
+            self.coverage = drone_control.get_coverage()
 
     def visualize(self, save=True):
         visual = Visualization(
@@ -71,7 +74,8 @@ class DronesProject:
             drones=self.drones,
             groups=self.groups,
             drones_paths=self.drones_paths,
-            additional_lines=self.additional_lines,
+            drones_diagrams=self.drones_diagrams,
+            coverage=self.coverage,
             parameters=self.parameters
         )
         visual.start(save=save)

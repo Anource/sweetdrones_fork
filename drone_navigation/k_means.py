@@ -18,7 +18,9 @@ class KMeans:
         dists = [drones[d].get_antenna_distance(self.snr_threshold) for d in range(self.drones_number)]
         drones_radius = np.sqrt(dists[0]**2 - (self.drones_height - self.users_height)**2)
         new_drones, new_regions, new_radii = self.sd_km(users, drones_radius)
-        return np.array(new_drones)
+        return np.array(new_drones), np.array(new_regions)
+
+    # def get_diagrams(self):
 
     def sd_km(self, users, radius):
         xx = []
