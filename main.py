@@ -1,16 +1,15 @@
 import numpy as np
 from user_control import UserControl
-from user_mobility.rpgm import ReferencePointGroupMobility
 from drone_control import DroneControl
 from drone_navigation.pso import PSO
 from drone_navigation.k_means import KMeans
-from visualization_3d import Visualization
+import matplotlib.pyplot as plt
 
 # Initial data for simulation
 simulation_params = {
     'area_x': 100,  # meters
     'area_y': 100,  # meters
-    'max_simulation_time': 60,  # s
+    'max_simulation_time': 100,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
     'drone_t_upd': 5.0,  # seconds
@@ -37,7 +36,7 @@ simulation_params = {
 }
 
 
-class DronesProject:
+class DroneSimulator:
     def __init__(self, parameters):
         self.parameters = parameters
         self.simulation_time = parameters['max_simulation_time']
@@ -46,49 +45,56 @@ class DronesProject:
         self.total_time_steps = int(self.simulation_time / self.delta_t)
         self.users = np.array([])
         self.drones = np.array([])
-        self.groups = np.array([])
-        self.drones_paths = np.array([])
-        self.drones_diagrams = np.array([])
-        self.coverage = np.array([])
-        self.user_mobility = ReferencePointGroupMobility
+        self.coverage_pso = np.array([])
+        self.coverage_kmeans = np.array([])
 
     def start(self, pso, kmeans):
-        user_control = UserControl(self.user_mobility, self.parameters)
+        user_control = UserControl(self.parameters)
         self.users = user_control.simulation()
-        self.groups = user_control.get_groups()
 
         if pso:
             drone_control = DroneControl(PSO, self.users, self.parameters)
             self.drones = drone_control.simulation()
-            self.drones_paths = drone_control.get_paths()
+            self.coverage_pso = drone_control.get_coverage()
         if kmeans:
             drone_control = DroneControl(KMeans, self.users, self.parameters)
             self.drones = drone_control.simulation()
-            self.drones_paths = drone_control.get_paths()
-            self.drones_diagrams = drone_control.get_diagrams()
-            self.coverage = drone_control.get_coverage()
+            self.coverage_kmeans = drone_control.get_coverage()
 
-    def visualize(self, save=True):
-        visual = Visualization(
-            users=self.users,
-            drones=self.drones,
-            groups=self.groups,
-            drones_paths=self.drones_paths,
-            drones_diagrams=self.drones_diagrams,
-            coverage=self.coverage,
-            parameters=self.parameters
-        )
-        visual.start(save=save)
+    def get_coverage(self):
+        return self.coverage_pso, self.coverage_kmeans
 
 
 def main():
-    pso = False
-    kmeans = True
-    visual = True if pso ^ kmeans else False
-    simulation = DronesProject(simulation_params)
-    simulation.start(pso=pso, kmeans=kmeans)
-    if visual:
-        simulation.visualize(save=False)
+    number_of_iterations = 100
+    all_coverage_pso = []
+    all_coverage_kmeans = []
+    for iteration in range(number_of_iterations):
+        simulation = DroneSimulator(simulation_params)
+        simulation.start(pso=True, kmeans=True)
+        coverage_pso, coverage_kmeans = simulation.get_coverage()
+        all_coverage_pso.append(coverage_pso)
+        all_coverage_kmeans.append(coverage_kmeans)
+
+    all_coverage_pso = np.average(all_coverage_pso, axis=0)
+    all_coverage_kmeans = np.average(all_coverage_kmeans, axis=0)
+
+    sim_time = simulation_params['max_simulation_time']
+    delta_t = simulation_params['delta_t']
+    label_x = np.arange(int(sim_time / delta_t))
+    plt.figure(dpi=150, figsize=(10, 5))
+    plt.title(f'Coverage probability: average value in {number_of_iterations} simulations')
+    plt.plot(label_x, all_coverage_pso, label='PSO')
+    plt.plot(label_x, all_coverage_kmeans, label='K-Means')
+    locs = plt.xticks()[0][1:-1]
+    new_locs = [int(i * delta_t) for i in locs]
+    plt.xticks(locs, new_locs)
+    plt.ylim(18, 102)
+    plt.xlabel('Modelling time, s')
+    plt.ylabel('Coverage probability, %')
+    plt.grid(alpha=0.6)
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':

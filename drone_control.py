@@ -20,19 +20,14 @@ class DroneControl:
         self.drones = np.array([])
         self.drones_coordinates = np.array([])
         self.drones_history = np.array([])
-        self.goals_history = np.array([])
-        self.diagrams = np.array([])
-        self.diagrams_history = np.array([])
         self.coverage = []
 
     def simulation(self):
         # Генерация координат дронов согласно выбранной mobility для момента t0 (initial)
         self.drones = [Drone(0, 0, 0, d, self.params) for d in range(self.drones_number)]
-        drones_coordinates, self.diagrams = self.mobility.generate_new_positions(self.drones, self.users[0])
+        drones_coordinates = self.mobility.generate_new_positions(self.drones, self.users[0])
         [self.drones[d].set_position(x, y, z) for d, [x, y, z] in zip(range(self.drones_number), drones_coordinates)]
         self.drones_history = np.expand_dims(np.copy(drones_coordinates), axis=0)
-        self.diagrams_history = np.expand_dims(np.copy(self.diagrams), axis=0)
-        self.goals_history = np.expand_dims(np.copy(self.get_goals()), axis=0)
         self.coverage.append(self.coverage_probability(self.users[0], drones_coordinates))
         # Симуляция дронов на каждом шаге и сохранение в историю
         for time_step in range(1, self.total_time_steps):
@@ -46,9 +41,7 @@ class DroneControl:
             # Обновляем дронов + сохраняем их координаты в "историю"
             current_coordinates = self.update_drones()
             self.coverage.append(self.coverage_probability(self.users[time_step], current_coordinates))
-            self.goals_history = np.concatenate((self.goals_history, np.expand_dims(self.get_goals(), axis=0)))
             self.drones_history = np.concatenate((self.drones_history, np.expand_dims(current_coordinates, axis=0)))
-            self.diagrams_history = np.concatenate((self.diagrams_history, np.expand_dims(self.diagrams, axis=0)))
 
         return self.drones_history
 
@@ -63,13 +56,10 @@ class DroneControl:
         coordinates = self.resort(old_coordinates, new_coordinates)
         [self.drones[d].update_goal(x, y, z) for d, [x, y, z] in zip(range(self.drones_number), coordinates)]
 
-    def get_goals(self):
-        return np.array([self.drones[d].get_goal() for d in range(self.drones_number)])
-
     def update_goals_in_t_upd_interval(self, time_step):
         if not time_step % self.t_upd_in_time_steps:
             # определяем новые позиции дронов и обновляем цели дронов
-            new_coordinates, self.diagrams = self.mobility.generate_new_positions(self.drones, self.users[time_step])
+            new_coordinates = self.mobility.generate_new_positions(self.drones, self.users[time_step])
             self.update_drones_goals(new_coordinates)
 
     def update_goals_when_all_arrived(self, time_step):
@@ -77,12 +67,6 @@ class DroneControl:
             # определяем новые позиции дронов и обновляем цели дронов
             new_coordinates = self.mobility.generate_new_positions(self.drones, self.users[time_step])
             self.update_drones_goals(new_coordinates)
-
-    def get_paths(self):
-        return self.goals_history
-
-    def get_diagrams(self):
-        return self.diagrams_history
 
     def get_coverage(self):
         return np.array(self.coverage)
