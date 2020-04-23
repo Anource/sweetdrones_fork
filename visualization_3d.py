@@ -4,7 +4,6 @@ import numpy as np
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d.art3d import Line3D
 import matplotlib.animation as animation
-from log import print_log
 
 
 class Visualization:

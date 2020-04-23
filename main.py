@@ -1,9 +1,8 @@
 import numpy as np
 from user_control import UserControl
-from user_mobility.rpgm import ReferencePointGroupMobility
+from rpgm import ReferencePointGroupMobility
 from drone_control import DroneControl
-from drone_navigation.pso import PSO
-from drone_navigation.k_means import KMeans
+from k_means import KMeans
 from visualization_3d import Visualization
 
 # Initial data for simulation
@@ -52,21 +51,16 @@ class DronesProject:
         self.coverage = np.array([])
         self.user_mobility = ReferencePointGroupMobility
 
-    def start(self, pso, kmeans):
+    def start(self):
         user_control = UserControl(self.user_mobility, self.parameters)
         self.users = user_control.simulation()
         self.groups = user_control.get_groups()
 
-        if pso:
-            drone_control = DroneControl(PSO, self.users, self.parameters)
-            self.drones = drone_control.simulation()
-            self.drones_paths = drone_control.get_paths()
-        if kmeans:
-            drone_control = DroneControl(KMeans, self.users, self.parameters)
-            self.drones = drone_control.simulation()
-            self.drones_paths = drone_control.get_paths()
-            self.drones_diagrams = drone_control.get_diagrams()
-            self.coverage = drone_control.get_coverage()
+        drone_control = DroneControl(KMeans, self.users, self.parameters)
+        self.drones = drone_control.simulation()
+        self.drones_paths = drone_control.get_paths()
+        self.drones_diagrams = drone_control.get_diagrams()
+        self.coverage = drone_control.get_coverage()
 
     def visualize(self, save=True):
         visual = Visualization(
@@ -82,11 +76,9 @@ class DronesProject:
 
 
 def main():
-    pso = False
-    kmeans = True
-    visual = True if pso ^ kmeans else False
+    visual = True
     simulation = DronesProject(simulation_params)
-    simulation.start(pso=pso, kmeans=kmeans)
+    simulation.start()
     if visual:
         simulation.visualize(save=False)
 

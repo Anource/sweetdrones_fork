@@ -20,8 +20,6 @@ class KMeans:
         new_drones, new_regions, new_radii = self.sd_km(users, drones_radius)
         return np.array(new_drones), np.array(new_regions)
 
-    # def get_diagrams(self):
-
     def sd_km(self, users, radius):
         xx = []
         yy = []

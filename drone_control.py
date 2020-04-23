@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.spatial
-from entity.drone import Drone
-from entity.antenna import Antenna
+from drone import Drone
+from antenna import Antenna
 
 
 class DroneControl:
@@ -37,11 +37,7 @@ class DroneControl:
         # Симуляция дронов на каждом шаге и сохранение в историю
         for time_step in range(1, self.total_time_steps):
 
-            # Case 1: Если текущий тайм слот совпадает с t_upd
             self.update_goals_in_t_upd_interval(time_step)
-
-            # Case 2: Если все дроны прилетели туда, куда нужно было
-            # self.update_goals_when_all_arrived(time_step)
 
             # Обновляем дронов + сохраняем их координаты в "историю"
             current_coordinates = self.update_drones()
@@ -88,14 +84,9 @@ class DroneControl:
         return np.array(self.coverage)
 
     def coverage_probability(self, users, drones):
-        """
-        Считаем Coverage Probability для конкретного момента времени: подаем список пользователей
-        и список дронов в момент времени t, t>0, на выходе имеем число подключенных юзеров
-        """
         # Calculate distances between each user and nearest drone
         distance = scipy.spatial.distance.cdist(users, drones)
         min_distances = np.min(distance, axis=1)
-        min_distances_indexes = np.argmin(distance, axis=1)
         common_snr = self.default_antenna.calculate_snr(min_distances)
         return len(users[common_snr > self.params['snr_threshold']]) / len(users) * 100
 

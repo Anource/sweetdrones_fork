@@ -24,16 +24,6 @@ class ReferencePointGroupMobility:
         self.users_goals = np.array([])
 
     def users_groups_distribution(self):
-        """
-        Сортировка индексов пользователей и групп
-        Пример:
-        20 пользователей, 3 группы, распределение по группам [4, 7, 9]
-        На выходе будет массив из индексов-принадлежностей пользователей к группам
-        [[0, 3, 6,  9]                          - 4 пользователя  в группе 0
-         [1, 4, 7, 10, 12, 14, 16]              - 7 пользователей в группе 1
-         [2, 5, 8, 11, 13, 15, 17, 18, 19]]     - 9 пользователей в группе 2
-
-        """
         group = [[] for _ in range(self.groups_number)]
         # group = [[]] * self.groups_number
         group_index = 0
@@ -90,10 +80,6 @@ class ReferencePointGroupMobility:
 
         # если скорость всех пользователей едина
         speed = self.users_speed * self.delta_t
-
-        # если скорость зависит от расстояния, которое нужно пройти
-        # dists_to_move = [scipy.spatial.distance.cdist(self.users, self.users_goals)[i, i] for i in range(self.users_number)]
-        # speed = np.array(dists_to_move) / self.user_move_time * self.delta_t
 
         users_dx = speed * np.cos(alpha) * np.sin(beta)
         users_dy = speed * np.sin(alpha) * np.sin(beta)
