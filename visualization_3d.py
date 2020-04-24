@@ -31,8 +31,8 @@ class Visualization:
         self.ax1 = plt.subplot2grid(gridsize, (0, 0), projection='3d', colspan=2, rowspan=3)
         self.ax2 = plt.subplot2grid(gridsize, (3, 0), colspan=1, rowspan=2)
         self.ax3 = plt.subplot2grid(gridsize, (3, 1), colspan=1, rowspan=2)
-        self.ax1.set_xlim(0, 100)
-        self.ax1.set_ylim(0, 100)
+        self.ax1.set_xlim(0, self.area_x)
+        self.ax1.set_ylim(0, self.area_y)
         self.ax1.set_zlim(0, 30)
 
         self.ax1.xaxis.set_pane_color((0, 0, 0, 0.01))
@@ -92,12 +92,14 @@ class Visualization:
             self.ax1.add_line(self.drones_line[d])
             self.ax1.add_line(self.drones_radius_circle[d])
             self.ax1.add_line(self.drones_path_line[d])
-        i = 0
-        for reg in self.diagrams[0]:
-            for line in reg:
-                self.drones_diagrams_line.append(Line3D([line[0][0], line[1][0]], [line[0][1], line[1][1]], [0, 0], color='#550055', lw=0.7))
-                self.ax1.add_line(self.drones_diagrams_line[i])
-                i += 1
+
+        if self.diagrams.size:  # Если массив диаграмм не пустой
+            i = 0
+            for reg in self.diagrams[0]:
+                for line in reg:
+                    self.drones_diagrams_line.append(Line3D([line[0][0], line[1][0]], [line[0][1], line[1][1]], [0, 0], color='#550055', lw=0.7))
+                    self.ax1.add_line(self.drones_diagrams_line[i])
+                    i += 1
         self.ax2_coverage_x = [0]
         self.ax2_coverage_y = [self.coverage[0]]
         self.coverage_line = Line2D(self.ax2_coverage_x, self.ax2_coverage_y)
@@ -125,11 +127,12 @@ class Visualization:
                                                 [self.drones[number, d, 1], self.drones_paths[number, d, 1]],
                                                 [self.drones[number, d, 2], self.drones_paths[number, d, 2]])
 
-        i = 0
-        for reg in self.diagrams[number]:
-            for line in reg:
-                self.drones_diagrams_line[i].set_data_3d([line[0][0], line[1][0]], [line[0][1], line[1][1]], [0, 0])
-                i += 1
+        if self.diagrams.size:  # Если массив диаграмм не пустой
+            i = 0
+            for reg in self.diagrams[number]:
+                for line in reg:
+                    self.drones_diagrams_line[i].set_data_3d([line[0][0], line[1][0]], [line[0][1], line[1][1]], [0, 0])
+                    i += 1
 
     def coverage_update(self, number):
         self.ax2_coverage_x.append(number * self.delta_t)

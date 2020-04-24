@@ -62,7 +62,7 @@ class PSO:
             users_pso = users_pso[
                 np.where(np.sqrt((users_pso[:, 0] - group_best[0]) ** 2 + (
                         users_pso[:, 1] - group_best[1]) ** 2) >= drones_radius)[0]]
-        return np.array(drones_best)
+        return np.array(drones_best), np.array([])
 
     def covered_users_by_single_drone(self, users, drone, radius):
         """

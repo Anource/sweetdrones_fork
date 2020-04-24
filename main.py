@@ -16,16 +16,16 @@ simulation_params = {
     'drone_t_upd': 5.0,  # seconds
 
     # Initial data for users
-    'users_number': 100,  # number
-    'groups_number': 4,  # number
-    'groups_limits': [8, 15, 25, 52],  # array of numbers
+    'users_number': 250,  # number
+    'groups_number': 5,  # number
+    'groups_limits': [50, 50, 50, 50, 50],  # array of numbers
     'users_speed': 1.4,  # m/s
     'users_height': 2,  # m
     'r_max_k': 1.3,
 
     # Initial data for drones
-    'drones_number': 3,  # number
-    'drones_speed': [5, 5, 5],  # m/s
+    'drones_number': 5,  # number
+    'drones_speed': [5, 5, 5, 5, 5],  # m/s
     'drones_height': 20,  # m
 
     # Initial data for antenna
@@ -61,6 +61,8 @@ class DronesProject:
             drone_control = DroneControl(PSO, self.users, self.parameters)
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
+            self.drones_diagrams = np.array([])
+            self.coverage = drone_control.get_coverage()
         if kmeans:
             drone_control = DroneControl(KMeans, self.users, self.parameters)
             self.drones = drone_control.simulation()
@@ -82,8 +84,8 @@ class DronesProject:
 
 
 def main():
-    pso = False
-    kmeans = True
+    pso = True
+    kmeans = False
     visual = True if pso ^ kmeans else False
     simulation = DronesProject(simulation_params)
     simulation.start(pso=pso, kmeans=kmeans)
