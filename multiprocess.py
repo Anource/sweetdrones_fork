@@ -43,6 +43,8 @@ def average_data(data, process):
     errors_in_exception = 0
     coverage_pso = []
     coverage_kmeans = []
+    coverage_twice_pso = []
+    coverage_twice_kmeans = []
     completed = 0
     while completed < local_initial_data['average_runs']:
         try:
@@ -50,6 +52,7 @@ def average_data(data, process):
             simulation = DronesProject(local_initial_data)
             simulation.start(pso=True, kmeans=True)
             c_pso, c_kmeans = simulation.get_coverage()
+            ct_pso, ct_kmeans = simulation.get_twice_coverage()
         except BaseException:
             print(f'Aargh! Error in process {process}. Try again.')
             errors_in_exception += 1
@@ -57,12 +60,16 @@ def average_data(data, process):
         else:
             coverage_pso.append(c_pso)
             coverage_kmeans.append(c_kmeans)
+            coverage_twice_pso.append(ct_pso)
+            coverage_twice_kmeans.append(ct_kmeans)
             completed += 1
 
     coverage_pso = np.average(coverage_pso, axis=0)
     coverage_kmeans = np.average(coverage_kmeans, axis=0)
     np.save(f'cases/{save_code}_{process}_pso.npy', coverage_pso)
     np.save(f'cases/{save_code}_{process}_kmeans.npy', coverage_kmeans)
+    np.save(f'cases/{save_code}_{process}_ct_pso.npy', coverage_twice_pso)
+    np.save(f'cases/{save_code}_{process}_ct_kmeans.npy', coverage_twice_kmeans)
     print('Errors:', errors_in_exception)
     bot.send_message(uid, f'Case {save_code} is completed. Process: {process}. Time: {hms(time.time() - block_time)}')
 

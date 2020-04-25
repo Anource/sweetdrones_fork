@@ -55,6 +55,8 @@ class DronesProject:
         self.coverage = np.array([])
         self.coverage_pso = np.array([])
         self.coverage_kmeans = np.array([])
+        self.coverage_twice_pso = np.array([])
+        self.coverage_twice_kmeans = np.array([])
         self.user_mobility = ReferencePointGroupMobility
 
     def start(self, pso, kmeans):
@@ -68,6 +70,7 @@ class DronesProject:
             self.drones_paths = drone_control.get_paths()
             self.drones_diagrams = np.array([])
             self.coverage_pso = drone_control.get_coverage()
+            self.coverage_twice_pso = drone_control.get_twice_coverage()
             self.coverage = np.copy(self.coverage_pso)
         if kmeans:
             drone_control = DroneControl(KMeans, self.users, self.parameters)
@@ -75,10 +78,14 @@ class DronesProject:
             self.drones_paths = drone_control.get_paths()
             self.drones_diagrams = drone_control.get_diagrams()
             self.coverage_kmeans = drone_control.get_coverage()
+            self.coverage_twice_kmeans = drone_control.get_twice_coverage()
             self.coverage = np.copy(self.coverage_kmeans)
 
     def get_coverage(self):
         return self.coverage_pso, self.coverage_kmeans
+
+    def get_twice_coverage(self):
+        return self.coverage_twice_pso, self.coverage_twice_kmeans
 
     def visualize(self, save=True):
         visual = Visualization(

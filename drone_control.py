@@ -24,6 +24,7 @@ class DroneControl:
         self.diagrams = np.array([])
         self.diagrams_history = np.array([])
         self.coverage = []
+        self.coverage_twice = []
 
     def simulation(self):
         # Генерация координат дронов согласно выбранной mobility для момента t0 (initial)
@@ -34,6 +35,7 @@ class DroneControl:
         self.diagrams_history = np.expand_dims(np.copy(self.diagrams), axis=0)
         self.goals_history = np.expand_dims(np.copy(self.get_goals()), axis=0)
         self.coverage.append(self.coverage_probability(self.users[0], drones_coordinates))
+        self.coverage_twice.append(self.count_for_twice_covering(self.users[0], drones_coordinates))
         # Симуляция дронов на каждом шаге и сохранение в историю
         for time_step in range(1, self.total_time_steps):
 
@@ -47,6 +49,7 @@ class DroneControl:
             # Обновляем дронов + сохраняем их координаты в "историю"
             current_coordinates = self.update_drones()
             self.coverage.append(self.coverage_probability(self.users[time_step], current_coordinates))
+            self.coverage_twice.append(self.count_for_twice_covering(self.users[time_step], current_coordinates))
             self.goals_history = np.concatenate((self.goals_history, np.expand_dims(self.get_goals(), axis=0)))
             self.drones_history = np.concatenate((self.drones_history, np.expand_dims(current_coordinates, axis=0)))
             self.diagrams_history = np.concatenate((self.diagrams_history, np.expand_dims(self.diagrams, axis=0)))
@@ -88,6 +91,9 @@ class DroneControl:
     def get_coverage(self):
         return np.array(self.coverage)
 
+    def get_twice_coverage(self):
+        return np.array(self.coverage_twice)
+
     def coverage_probability(self, users, drones):
         """
         Считаем Coverage Probability для конкретного момента времени: подаем список пользователей
@@ -103,10 +109,22 @@ class DroneControl:
     def count_for_twice_covering(self, users, drones):
         # Calculate distances between each user and nearest drone
         distance = scipy.spatial.distance.cdist(users, drones)
-        min_distances = np.min(distance, axis=1)
+        min_distances_1 = np.min(distance, axis=1)
         min_distances_indexes = np.argmin(distance, axis=1)
-        common_snr = self.default_antenna.calculate_snr(min_distances)
-        return len(users[common_snr > self.params['snr_threshold']]) / len(users) * 100
+
+        distance_wo_min = np.array([np.delete(distance[i], min_distances_indexes[i]) for i in range(len(distance))])
+        min_distances_2 = np.min(distance_wo_min, axis=1)
+
+        # Calculate SNR based on distance and SNR threshold
+        snr_closest_drone = self.default_antenna.calculate_snr(min_distances_1)
+        snr_second_closest_drone = self.default_antenna.calculate_snr(min_distances_2)
+        covered_users = len(users[snr_closest_drone > self.params['snr_threshold']])
+        condition1 = snr_closest_drone > self.params['snr_threshold']
+        condition2 = snr_second_closest_drone > self.params['snr_threshold']
+        covered_twice_users = len(users[np.logical_and(condition1, condition2)])
+        all_users = len(users)
+        return covered_twice_users / all_users * 100
+        # return (covered_users - covered_twice_users) / all_users * 100
 
     def minor_matrix(self, arr, i, j):
         return arr[np.array(list(range(i)) + list(range(i + 1, arr.shape[0])))[:, np.newaxis],
