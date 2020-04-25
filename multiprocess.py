@@ -1,63 +1,126 @@
 from multiprocessing import Process
+import numpy as np
 import time
+import copy
+from main import DronesProject, simulation_params
+
+import vk_log
+token = 'a5f92c3aa82877091fd3ba8a98f493b34d8355a0266b6bf5371268b9df05f78f8cdad25ace67a54448c0f'
+api_v = '5.101'
+bot = vk_log.vk(token, api_v)
+uid = 62619861  # ID юзера вк, кому присылать сообщения
 
 
-def count_down(name):
-    stime = time.time()
-    print('Process %s starting...' % name)
-    s = 0
-    for i in range(10_000_000):
-        s += i**2 * (i / 15)
-    # print('Process %s s: %i' % (name, s))
-    print('Process %s time: %f' % (name, time.time() - stime))
-    # print('Process %s exiting...' % name)
+def hms(time_s):
+    if time_s >= 86400:
+        d = int(time_s / 86400)
+        h = int((time_s - 86400 * d) / 3600)
+        m = int((time_s - 86400 * d - 3600 * h) / 60)
+        s = int((time_s - 86400 * d - 3600 * h - 60 * m))
+        return f'{d}d {h}h {m}m {s}s'
+    elif 3600 <= time_s < 86400:
+        h = int(time_s / 3600)
+        m = int((time_s - 3600 * h) / 60)
+        s = int((time_s - 3600 * h - 60 * m))
+        return f'{h}h {m}m {s}s'
+    elif 60 <= time_s < 3600:
+        m = int(time_s / 60)
+        s = int(time_s - 60 * m)
+        return f'{m}m {s}s'
+    elif 0 <= time_s < 60:
+        s = int(time_s)
+        return f'{s}s'
+
+
+def average_data(data, process):
+    print(f'Started with process {process}')
+    block_time = time.time()
+    local_initial_data = copy.deepcopy(simulation_params)
+    for key in data:
+        if key != 'save_code':
+            local_initial_data[key] = data[key]
+    save_code = data['save_code']
+    errors_in_exception = 0
+    coverage_pso = []
+    coverage_kmeans = []
+    completed = 0
+    while completed < local_initial_data['average_runs']:
+        try:
+            # print(f'Trying: {completed}')
+            simulation = DronesProject(local_initial_data)
+            simulation.start(pso=True, kmeans=True)
+            c_pso, c_kmeans = simulation.get_coverage()
+        except BaseException:
+            print(f'Aargh! Error in process {process}. Try again.')
+            errors_in_exception += 1
+            continue
+        else:
+            coverage_pso.append(c_pso)
+            coverage_kmeans.append(c_kmeans)
+            completed += 1
+
+    coverage_pso = np.average(coverage_pso, axis=0)
+    coverage_kmeans = np.average(coverage_kmeans, axis=0)
+    np.save(f'cases/{save_code}_{process}_pso.npy', coverage_pso)
+    np.save(f'cases/{save_code}_{process}_kmeans.npy', coverage_kmeans)
+    print('Errors:', errors_in_exception)
+    bot.send_message(uid, f'Case {save_code} is completed. Process: {process}. Time: {hms(time.time() - block_time)}')
+
+
+# Вводить только те данные, которые меняются в текущей симуляции; остальные подхватятся из дефолтного списка
+changed_data_01 = {
+    'average_runs': 500,
+    'drone_t_upd': 5.,
+    'save_code': 'equal_groups_t5'
+}
+
+changed_data_02 = {
+    'average_runs': 500,
+    'drone_t_upd': 5.,
+    'groups_limits': [34, 39, 45, 55, 77],
+    'save_code': 'not_equal_groups_t5'
+}
+
+changed_data_03 = {
+    'average_runs': 500,
+    'drone_t_upd': 0.,
+    'save_code': 'equal_groups_t0'
+}
+
+changed_data_04 = {
+    'average_runs': 500,
+    'drone_t_upd': 0.,
+    'groups_limits': [34, 39, 45, 55, 77],
+    'save_code': 'not_equal_groups_t0'
+}
+
+use_multiprocess = True
+
+
+def average_data_multiprocess(data, process_name):
+    average_data(data, process_name)
 
 
 if __name__ == '__main__':
-    process1 = Process(target=count_down, args=('A'))
-    process2 = Process(target=count_down, args=('B'))
-    process3 = Process(target=count_down, args=('C'))
-    process4 = Process(target=count_down, args=('D'))
-    process5 = Process(target=count_down, args=('E'))
-    process6 = Process(target=count_down, args=('F'))
-    process7 = Process(target=count_down, args=('G'))
-    process8 = Process(target=count_down, args=('H'))
-    process9 = Process(target=count_down, args=('J'))
-    process10 = Process(target=count_down, args=('K'))
+    average_data(changed_data_03, 'default')
+    if use_multiprocess:
+        process1 = Process(target=average_data_multiprocess, args=(changed_data_01, 'A'))
+        process2 = Process(target=average_data_multiprocess, args=(changed_data_02, 'B'))
+        process3 = Process(target=average_data_multiprocess, args=(changed_data_03, 'C'))
+        process4 = Process(target=average_data_multiprocess, args=(changed_data_04, 'D'))
+        # process5 = Process(target=average_data_multiprocess, args=(changed_data_01, 'E'))
+        # process6 = Process(target=average_data_multiprocess, args=(changed_data_01, 'F'))
 
-    process1.start()
-    process2.start()
-    process3.start()
-    process4.start()
-    process5.start()
-    process6.start()
-    process7.start()
-    process8.start()
-    process9.start()
-    process10.start()
+        process1.start()
+        process2.start()
+        process3.start()
+        process4.start()
+        # process5.start()
+        # process6.start()
 
-    process1.join()
-    process2.join()
-    process3.join()
-    process4.join()
-    process5.join()
-    process6.join()
-    process7.join()
-    process8.join()
-    process9.join()
-    process10.join()
-
-    print('Done.')
-    # count_down('Single')
-
-    # 1: 3.79
-    # 2: 3.81
-    # 3: 3.88
-    # 4: 3.78
-    # 5: 3.81
-    # 6: 4.06
-    # 7: 4.58
-    # 8: 5.12
-    # 9: 5.51
-    # 10: 5.66
-
+        process1.join()
+        process2.join()
+        process3.join()
+        process4.join()
+        # process5.join()
+        # process6.join()

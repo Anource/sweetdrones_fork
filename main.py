@@ -6,6 +6,7 @@ from drone_navigation.pso import PSO
 from drone_navigation.k_means import KMeans
 from visualization_3d import Visualization
 
+
 # Initial data for simulation
 simulation_params = {
     'area_x': 100,  # meters
@@ -13,7 +14,8 @@ simulation_params = {
     'max_simulation_time': 60,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
-    'drone_t_upd': 5.0,  # seconds
+
+    'average_runs': 100,
 
     # Initial data for users
     'users_number': 250,  # number
@@ -21,11 +23,12 @@ simulation_params = {
     'groups_limits': [50, 50, 50, 50, 50],  # array of numbers
     'users_speed': 1.4,  # m/s
     'users_height': 2,  # m
-    'r_max_k': 1.3,
+    'r_max_k': 1.,
 
     # Initial data for drones
     'drones_number': 5,  # number
     'drones_speed': [5, 5, 5, 5, 5],  # m/s
+    'drone_t_upd': 5.0,  # seconds    # IF ZERO - DRONES UPDATE THEIR POSITION WHEN EVERY DRONE IS ON POSITION
     'drones_height': 20,  # m
 
     # Initial data for antenna
@@ -50,6 +53,8 @@ class DronesProject:
         self.drones_paths = np.array([])
         self.drones_diagrams = np.array([])
         self.coverage = np.array([])
+        self.coverage_pso = np.array([])
+        self.coverage_kmeans = np.array([])
         self.user_mobility = ReferencePointGroupMobility
 
     def start(self, pso, kmeans):
@@ -62,13 +67,18 @@ class DronesProject:
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
             self.drones_diagrams = np.array([])
-            self.coverage = drone_control.get_coverage()
+            self.coverage_pso = drone_control.get_coverage()
+            self.coverage = np.copy(self.coverage_pso)
         if kmeans:
             drone_control = DroneControl(KMeans, self.users, self.parameters)
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
             self.drones_diagrams = drone_control.get_diagrams()
-            self.coverage = drone_control.get_coverage()
+            self.coverage_kmeans = drone_control.get_coverage()
+            self.coverage = np.copy(self.coverage_kmeans)
+
+    def get_coverage(self):
+        return self.coverage_pso, self.coverage_kmeans
 
     def visualize(self, save=True):
         visual = Visualization(
@@ -95,3 +105,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+

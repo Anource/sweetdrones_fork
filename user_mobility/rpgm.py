@@ -18,7 +18,8 @@ class ReferencePointGroupMobility:
         self.user_move_time = np.array([np.random.exponential(1)])
         self.user_move_time_history = np.copy(self.user_move_time)
         self.r_max_k = parameters['r_max_k']
-        self.r_max = self.r_max_k * self.drones_radius * (self.drones_number / self.groups_number)
+        self.r_max = np.array(self.groups_limits) * 0.5
+        # self.r_max = self.r_max_k * self.drones_radius * (self.drones_number / self.groups_number)
         self.group = []
         self.users = np.array([])
         self.users_goals = np.array([])
@@ -65,11 +66,11 @@ class ReferencePointGroupMobility:
             idx = np.random.randint(len(centers))
             group_center = centers.pop(idx)
 
-            groups_x = group_center[0] + np.random.uniform(-self.r_max / 2, self.r_max / 2)
-            groups_y = group_center[1] + np.random.uniform(-self.r_max / 2, self.r_max / 2)
+            groups_x = group_center[0] + np.random.uniform(-self.area_x / 7, self.area_x / 7)
+            groups_y = group_center[1] + np.random.uniform(-self.area_y / 7, self.area_y / 7)
             groups_z = group_center[2]
 
-            radius = np.random.uniform(0, self.r_max ** 2, size=self.groups_limits[g])
+            radius = np.random.uniform(0, self.r_max[g] ** 2, size=self.groups_limits[g])
             radius[0] = 0  # to generate first user in leader coordinates (leader itself)
             angle = np.random.uniform(0, 2 * np.pi, size=self.groups_limits[g])
 
@@ -136,7 +137,7 @@ class ReferencePointGroupMobility:
             # Ищем расстояние между лидером и каждым юзером группы и отмечаем тех,
             # чья цель за пределами радиуса r_max (относительно лидера)
             dist_from_leader = scipy.spatial.distance.cdist(leader, others)[0]
-            dist_idx = np.where(dist_from_leader > self.r_max)[0]
+            dist_idx = np.where(dist_from_leader > self.r_max[g])[0]
 
             # Определяем трехмерные полярные углы между целями юзеров и лидера
             c1_theta = np.arctan2(goals_y[0] - goals_y, goals_x[0] - goals_x)[dist_idx]
@@ -146,9 +147,9 @@ class ReferencePointGroupMobility:
             # Перезаписываем цели тех, кто собирается уйти от лидера:
             # Если цель юзера вне радиуса r_max с центром на цели лидера,
             # то устанавливаем целью точку на границе r_max (подробнее в документации)
-            goals_x[dist_idx] += (dist_from_leader[dist_idx] - self.r_max) * np.cos(c1_theta) * np.sin(c2_theta)
-            goals_y[dist_idx] += (dist_from_leader[dist_idx] - self.r_max) * np.sin(c1_theta) * np.sin(c2_theta)
-            goals_z[dist_idx] += (dist_from_leader[dist_idx] - self.r_max) * np.cos(c2_theta)
+            goals_x[dist_idx] += (dist_from_leader[dist_idx] - self.r_max[g]) * np.cos(c1_theta) * np.sin(c2_theta)
+            goals_y[dist_idx] += (dist_from_leader[dist_idx] - self.r_max[g]) * np.sin(c1_theta) * np.sin(c2_theta)
+            goals_z[dist_idx] += (dist_from_leader[dist_idx] - self.r_max[g]) * np.cos(c2_theta)
 
             users_goal_x[self.group[g]] = goals_x
             users_goal_y[self.group[g]] = goals_y
