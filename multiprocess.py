@@ -5,7 +5,7 @@ import copy
 from main import DronesProject, simulation_params
 
 import vk_log
-token = 'a5f92c3aa82877091fd3ba8a98f493b34d8355a0266b6bf5371268b9df05f78f8cdad25ace67a54448c0f'
+token = 'VK_TOKEN_PASTE_HERE'
 api_v = '5.101'
 bot = vk_log.vk(token, api_v)
 uid = 62619861  # ID юзера вк, кому присылать сообщения
