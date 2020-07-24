@@ -46,6 +46,7 @@ def average_data(data, process):
     coverage_twice_pso = []
     coverage_twice_kmeans = []
     completed = 0
+    mid_time = time.time()
     while completed < local_initial_data['average_runs']:
         try:
             # print(f'Trying: {completed}')
@@ -62,43 +63,54 @@ def average_data(data, process):
             coverage_kmeans.append(c_kmeans)
             coverage_twice_pso.append(ct_pso)
             coverage_twice_kmeans.append(ct_kmeans)
+            if not completed % int(local_initial_data['average_runs'] / 5):
+
+                bot.send_message(uid, f"[MIDDLE REPORT] MP {process}\n"
+                                      f"Case {save_code}\n"
+                                      f"Stage {completed}/{local_initial_data['average_runs']}\n"
+                                      f"Time: {hms(time.time() - mid_time)}\n"
+                                      f"Estimated: {hms((time.time() - mid_time) * int(5 - 5 * completed / local_initial_data['average_runs'])) if completed else 'unknown'}")
+                mid_time = time.time()
             completed += 1
 
     coverage_pso = np.average(coverage_pso, axis=0)
     coverage_kmeans = np.average(coverage_kmeans, axis=0)
     np.save(f'cases/{save_code}_{process}_pso.npy', coverage_pso)
     np.save(f'cases/{save_code}_{process}_kmeans.npy', coverage_kmeans)
-    np.save(f'cases/{save_code}_{process}_ct_pso.npy', coverage_twice_pso)
-    np.save(f'cases/{save_code}_{process}_ct_kmeans.npy', coverage_twice_kmeans)
+    np.save(f'cases/tw_{save_code}_{process}_pso.npy', coverage_twice_pso)
+    np.save(f'cases/tw_{save_code}_{process}_kmeans.npy', coverage_twice_kmeans)
     print('Errors:', errors_in_exception)
-    bot.send_message(uid, f'Case {save_code} is completed. Process: {process}. Time: {hms(time.time() - block_time)}')
+    bot.send_message(uid, f"[FINAL REPORT] MP {process}\n"
+                          f"Case {save_code}\n"
+                          f"Stage {completed}/{local_initial_data['average_runs']}\n"
+                          f"Total time: {hms(time.time() - block_time)}")
 
 
 # Вводить только те данные, которые меняются в текущей симуляции; остальные подхватятся из дефолтного списка
 changed_data_01 = {
     'average_runs': 500,
     'drone_t_upd': 5.,
-    'save_code': 'equal_groups_t5'
+    'save_code': 'c2_equal_groups_t5'
 }
 
 changed_data_02 = {
     'average_runs': 500,
     'drone_t_upd': 5.,
     'groups_limits': [34, 39, 45, 55, 77],
-    'save_code': 'not_equal_groups_t5'
+    'save_code': 'c2_not_equal_groups_t5'
 }
 
 changed_data_03 = {
     'average_runs': 500,
     'drone_t_upd': 0.,
-    'save_code': 'equal_groups_t0'
+    'save_code': 'c2_equal_groups_t0'
 }
 
 changed_data_04 = {
     'average_runs': 500,
     'drone_t_upd': 0.,
     'groups_limits': [34, 39, 45, 55, 77],
-    'save_code': 'not_equal_groups_t0'
+    'save_code': 'c2_not_equal_groups_t0'
 }
 
 use_multiprocess = True
@@ -109,7 +121,7 @@ def average_data_multiprocess(data, process_name):
 
 
 if __name__ == '__main__':
-    average_data(changed_data_03, 'default')
+    # average_data(changed_data_03, 'default')
     if use_multiprocess:
         process1 = Process(target=average_data_multiprocess, args=(changed_data_01, 'A'))
         process2 = Process(target=average_data_multiprocess, args=(changed_data_02, 'B'))

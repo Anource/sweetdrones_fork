@@ -9,9 +9,9 @@ from visualization_3d import Visualization
 
 # Initial data for simulation
 simulation_params = {
-    'area_x': 100,  # meters
-    'area_y': 100,  # meters
-    'max_simulation_time': 60,  # s
+    'area_x': 300,  # meters
+    'area_y': 300,  # meters
+    'max_simulation_time': 300,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
 
@@ -29,12 +29,12 @@ simulation_params = {
     'drones_number': 5,  # number
     'drones_speed': [5, 5, 5, 5, 5],  # m/s
     'drone_t_upd': 5.0,  # seconds    # IF ZERO - DRONES UPDATE THEIR POSITION WHEN EVERY DRONE IS ON POSITION
-    'drones_height': 20,  # m
+    'drones_height': 40,  # m
 
     # Initial data for antenna
     'transmit_power': 24,  # dBm
-    'transmission_bandwidth': 0.56 * 10 ** 9,  # Hz
-    'carrier_frequency': 60 * 10 ** 9,  # Hz
+    'transmission_bandwidth': 1. * 10 ** 9,  # Hz
+    'carrier_frequency': 28 * 10 ** 9,  # Hz
     'receive_antenna_gain': 3,  # dBi
     'transmit_antenna_gain': 3,  # dBi
 }
@@ -101,8 +101,8 @@ class DronesProject:
 
 
 def main():
-    pso = True
-    kmeans = False
+    pso = False
+    kmeans = True
     visual = True if pso ^ kmeans else False
     simulation = DronesProject(simulation_params)
     simulation.start(pso=pso, kmeans=kmeans)

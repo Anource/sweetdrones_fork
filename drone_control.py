@@ -123,7 +123,7 @@ class DroneControl:
         condition2 = snr_second_closest_drone > self.params['snr_threshold']
         covered_twice_users = len(users[np.logical_and(condition1, condition2)])
         all_users = len(users)
-        return covered_twice_users / all_users * 100
+        return covered_twice_users  # / all_users * 100
         # return (covered_users - covered_twice_users) / all_users * 100
 
     def minor_matrix(self, arr, i, j):

@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d.art3d import Line3D
 import matplotlib.animation as animation
+from entity.antenna import Antenna
 from log import print_log
 
 
@@ -72,7 +73,10 @@ class Visualization:
         self.drones_radius_circle = []
         self.drones_path_line = []
         self.drones_diagrams_line = []
-        self.rad = np.sqrt(26.648092476442518**2 - 18**2)
+        # self.rad = np.sqrt(26.648092476442518**2 - 18**2)
+        ant = Antenna(parameters)
+        distance_3d = ant.get_distance_on_snr(parameters['snr_threshold'])
+        self.rad = np.sqrt(distance_3d**2 - (parameters['drones_height'] - parameters['users_height'])**2)
         self.r_angles = np.linspace(0, 2 * np.pi, 30)
         for g in range(self.groups_number):
             self.groups_leaders_line.append(Line3D(self.users[0, self.group[g][0], 0], self.users[0, self.group[g][0], 1], self.users[0, self.group[g][0], 2], color=colors[g][0], linestyle='', marker='D'))
