@@ -5,7 +5,7 @@ import copy
 from main import DronesProject, simulation_params
 
 import vk_log
-token = 'a5f92c3aa82877091fd3ba8a98f493b34d8355a0266b6bf5371268b9df05f78f8cdad25ace67a54448c0f 0'
+token = 'a5f92c3aa82877091fd3ba8a98f493b34d8355a0266b6bf5371268b9df05f78f8cdad25ace67a54448c0f'
 api_v = '5.101'
 bot = vk_log.vk(token, api_v)
 uid = 62619861  # ID юзера вк, кому присылать сообщения
@@ -125,21 +125,21 @@ if __name__ == '__main__':
     if use_multiprocess:
         process1 = Process(target=average_data_multiprocess, args=(changed_data_01, 'A'))
         process2 = Process(target=average_data_multiprocess, args=(changed_data_02, 'B'))
-        process3 = Process(target=average_data_multiprocess, args=(changed_data_03, 'C'))
-        process4 = Process(target=average_data_multiprocess, args=(changed_data_04, 'D'))
+        # process3 = Process(target=average_data_multiprocess, args=(changed_data_03, 'C'))
+        # process4 = Process(target=average_data_multiprocess, args=(changed_data_04, 'D'))
         # process5 = Process(target=average_data_multiprocess, args=(changed_data_01, 'E'))
         # process6 = Process(target=average_data_multiprocess, args=(changed_data_01, 'F'))
 
         process1.start()
         process2.start()
-        process3.start()
-        process4.start()
+        # process3.start()
+        # process4.start()
         # process5.start()
         # process6.start()
 
         process1.join()
         process2.join()
-        process3.join()
-        process4.join()
+        # process3.join()
+        # process4.join()
         # process5.join()
         # process6.join()

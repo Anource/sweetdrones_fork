@@ -9,8 +9,8 @@ from visualization_3d import Visualization
 
 # Initial data for simulation
 simulation_params = {
-    'area_x': 300,  # meters
-    'area_y': 300,  # meters
+    'area_x': 200,  # meters
+    'area_y': 200,  # meters
     'max_simulation_time': 300,  # s
     'delta_t': 0.1,  # s
     'snr_threshold': 20,  # dB
