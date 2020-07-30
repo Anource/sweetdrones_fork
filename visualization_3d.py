@@ -13,19 +13,19 @@ class Visualization:
         # Исходные данные
         self.area_x = parameters['area_x']
         self.area_y = parameters['area_y']
-        self.area_z = 30
+        self.area_z = parameters['drones_height']
         self.users = users
         self.drones = drones
         self.drones_paths = drones_paths
         self.diagrams = drones_diagrams
         self.coverage = coverage
-        max_simulation_time = parameters['max_simulation_time']
-        delta_t = parameters['delta_t']
-        self.total_time_steps = int(max_simulation_time / delta_t)
-        self.groups_number = parameters['groups_number']
-        self.drones_number = parameters['drones_number']
         self.max_simulation_time = parameters['max_simulation_time']
         self.delta_t = parameters['delta_t']
+        self.delta_t_vis = 0.1
+        self.delta_diff = self.delta_t_vis / self.delta_t
+        self.total_time_steps = int(self.max_simulation_time / self.delta_t_vis)
+        self.groups_number = parameters['groups_number']
+        self.drones_number = parameters['drones_number']
 
         gridsize = (5, 2)
         self.fig = plt.figure(dpi=100, figsize=(10, 7))
@@ -34,13 +34,13 @@ class Visualization:
         self.ax3 = plt.subplot2grid(gridsize, (3, 1), colspan=1, rowspan=2)
         self.ax1.set_xlim(0, self.area_x)
         self.ax1.set_ylim(0, self.area_y)
-        self.ax1.set_zlim(0, 30)
+        self.ax1.set_zlim(0, self.area_z)
 
         self.ax1.xaxis.set_pane_color((0, 0, 0, 0.01))
         self.ax1.yaxis.set_pane_color((0, 0, 0, 0.01))
         self.ax1.zaxis.set_pane_color((0, 0, 0, 0.01))
 
-        self.ax1.set_zticks([0, 10, 20, 30, 40])
+        self.ax1.set_zticks(np.arange(0, self.area_z + 10, 10))
 
         self.ax1.set_xlabel("x, m")
         self.ax1.set_ylabel("y, m")
@@ -114,15 +114,18 @@ class Visualization:
         self.coverage_line_2 = Line2D(self.ax3_coverage_x, self.ax3_coverage_y)
         self.ax3.add_line(self.coverage_line_2)
 
-    def user_update(self, number):
+    def user_update(self, num):
+        number = int(num * self.delta_diff)
         self.users_line.set_data_3d(self.users[number, 0, :, 0], self.users[number, 0, :, 1], self.users[number, 0, :, 2])
 
-    def groups_update(self, number):
+    def groups_update(self, num):
+        number = int(num * self.delta_diff)
         for g in range(self.groups_number):
             self.groups_leaders_line[g].set_data_3d(self.users[number, self.group[g][0], 0], self.users[number, self.group[g][0], 1], self.users[number, self.group[g][0], 2])
             self.groups_line[g].set_data_3d(self.users[number, self.group[g][1:], 0], self.users[number, self.group[g][1:], 1], self.users[number, self.group[g][1:], 2])
 
-    def drone_update(self, number):
+    def drone_update(self, num):
+        number = int(num * self.delta_diff)
         for d in range(self.drones_number):
             self.drones_line[d].set_data_3d(self.drones[number, d, 0], self.drones[number, d, 1], self.drones[number, d, 2])
             self.drones_radius_circle[d].set_data_3d(self.drones[number, d, 0] + self.rad * np.cos(self.r_angles),
@@ -138,7 +141,8 @@ class Visualization:
                     self.drones_diagrams_line[i].set_data_3d([line[0][0], line[1][0]], [line[0][1], line[1][1]], [0, 0])
                     i += 1
 
-    def coverage_update(self, number):
+    def coverage_update(self, num):
+        number = int(num * self.delta_diff)
         self.ax2_coverage_x.append(number * self.delta_t)
         self.ax2_coverage_y.append(self.coverage[number])
         self.coverage_line.set_data(self.ax2_coverage_x, self.ax2_coverage_y)
