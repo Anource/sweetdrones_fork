@@ -113,7 +113,7 @@ def main():
     simulation = DronesProject(simulation_params)
     simulation.start(pso=pso, kmeans=kmeans)
     if visual:
-        simulation.visualize(save=False)
+        simulation.visualize(save=True)
 
 
 if __name__ == '__main__':
