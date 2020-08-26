@@ -2,6 +2,7 @@ import numpy as np
 import scipy.spatial
 from entity.drone import Drone
 from entity.antenna import Antenna
+import time
 
 
 class DroneControl:
@@ -38,14 +39,14 @@ class DroneControl:
         self.coverage_twice.append(self.count_for_twice_covering(self.users[0], drones_coordinates))
         # Симуляция дронов на каждом шаге и сохранение в историю
         for time_step in range(1, self.total_time_steps):
-
+            # gst = time.time()
             if self.drone_t_upd != 0.:
                 # Case 1: Если текущий тайм слот совпадает с t_upd
                 self.update_goals_in_t_upd_interval(time_step)
             else:
                 # Case 2: Если все дроны прилетели туда, куда нужно было
                 self.update_goals_when_all_arrived(time_step)
-
+            # print("drone iteration:", time.time() - gst)
             # Обновляем дронов + сохраняем их координаты в "историю"
             current_coordinates = self.update_drones()
             self.coverage.append(self.coverage_probability(self.users[time_step], current_coordinates))

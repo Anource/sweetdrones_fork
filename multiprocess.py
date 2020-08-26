@@ -73,8 +73,8 @@ def average_data(data, process):
                 mid_time = time.time()
             completed += 1
 
-    coverage_pso = np.average(coverage_pso, axis=0)
-    coverage_kmeans = np.average(coverage_kmeans, axis=0)
+    # coverage_pso = np.average(coverage_pso, axis=0)
+    # coverage_kmeans = np.average(coverage_kmeans, axis=0)
     np.save(f'cases/{save_code}_{process}_pso.npy', coverage_pso)
     np.save(f'cases/{save_code}_{process}_kmeans.npy', coverage_kmeans)
     np.save(f'cases/tw_{save_code}_{process}_pso.npy', coverage_twice_pso)
@@ -87,30 +87,59 @@ def average_data(data, process):
 
 
 # Вводить только те данные, которые меняются в текущей симуляции; остальные подхватятся из дефолтного списка
+# changed_data_01 = {
+#     'average_runs': 500,
+#     'drone_t_upd': 5.,
+#     'save_code': 'c2_equal_groups_t5'
+# }
+#
+# changed_data_02 = {
+#     'average_runs': 500,
+#     'drone_t_upd': 5.,
+#     'groups_limits': [34, 39, 45, 55, 77],
+#     'save_code': 'c2_not_equal_groups_t5'
+# }
+#
+# changed_data_03 = {
+#     'average_runs': 500,
+#     'drone_t_upd': 0.,
+#     'save_code': 'c2_equal_groups_t0'
+# }
+#
+# changed_data_04 = {
+#     'average_runs': 500,
+#     'drone_t_upd': 0.,
+#     'groups_limits': [34, 39, 45, 55, 77],
+#     'save_code': 'c2_not_equal_groups_t0'
+# }
+
 changed_data_01 = {
-    'average_runs': 500,
-    'drone_t_upd': 5.,
-    'save_code': 'c2_equal_groups_t5'
+    'average_runs': 25,
+    'max_simulation_time': 10,
+    'delta_t': 0.001,
+    'drone_t_upd': 0.01,
+    'save_code': 'new_tupd001_part1'
 }
-
 changed_data_02 = {
-    'average_runs': 500,
-    'drone_t_upd': 5.,
-    'groups_limits': [34, 39, 45, 55, 77],
-    'save_code': 'c2_not_equal_groups_t5'
+    'average_runs': 25,
+    'max_simulation_time': 10,
+    'delta_t': 0.001,
+    'drone_t_upd': 0.01,
+    'save_code': 'new_tupd001_part2'
 }
-
 changed_data_03 = {
-    'average_runs': 500,
-    'drone_t_upd': 0.,
-    'save_code': 'c2_equal_groups_t0'
+    'average_runs': 25,
+    'max_simulation_time': 10,
+    'delta_t': 0.001,
+    'drone_t_upd': 0.01,
+    'save_code': 'new_tupd001_part3'
 }
-
 changed_data_04 = {
-    'average_runs': 500,
-    'drone_t_upd': 0.,
-    'groups_limits': [34, 39, 45, 55, 77],
-    'save_code': 'c2_not_equal_groups_t0'
+    'average_runs': 25,
+    'max_simulation_time': 10,
+    'delta_t': 0.001,
+    'drone_t_upd': 0.01,
+    'save_code': 'new_tupd001_part4'
 }
 
 use_multiprocess = True
@@ -125,21 +154,21 @@ if __name__ == '__main__':
     if use_multiprocess:
         process1 = Process(target=average_data_multiprocess, args=(changed_data_01, 'A'))
         process2 = Process(target=average_data_multiprocess, args=(changed_data_02, 'B'))
-        # process3 = Process(target=average_data_multiprocess, args=(changed_data_03, 'C'))
-        # process4 = Process(target=average_data_multiprocess, args=(changed_data_04, 'D'))
+        process3 = Process(target=average_data_multiprocess, args=(changed_data_03, 'C'))
+        process4 = Process(target=average_data_multiprocess, args=(changed_data_04, 'D'))
         # process5 = Process(target=average_data_multiprocess, args=(changed_data_01, 'E'))
         # process6 = Process(target=average_data_multiprocess, args=(changed_data_01, 'F'))
 
         process1.start()
         process2.start()
-        # process3.start()
-        # process4.start()
+        process3.start()
+        process4.start()
         # process5.start()
         # process6.start()
 
         process1.join()
         process2.join()
-        # process3.join()
-        # process4.join()
+        process3.join()
+        process4.join()
         # process5.join()
         # process6.join()

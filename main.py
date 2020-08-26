@@ -5,14 +5,15 @@ from drone_control import DroneControl
 from drone_navigation.pso import PSO
 from drone_navigation.k_means import KMeans
 from visualization_3d import Visualization
+import time
 
 
 # Initial data for simulation
 simulation_params = {
     'area_x': 200,  # meters
     'area_y': 200,  # meters
-    'max_simulation_time': 300,  # s
-    'delta_t': 0.1,  # s
+    'max_simulation_time': 10,  # s
+    'delta_t': 0.001,  # s
     'snr_threshold': 20,  # dB
 
     'average_runs': 100,
@@ -28,7 +29,7 @@ simulation_params = {
     # Initial data for drones
     'drones_number': 5,  # number
     'drones_speed': [5, 5, 5, 5, 5],  # m/s
-    'drone_t_upd': 5.0,  # seconds    # IF ZERO - DRONES UPDATE THEIR POSITION WHEN EVERY DRONE IS ON POSITION
+    'drone_t_upd': 0.01,  # seconds    # IF ZERO - DRONES UPDATE THEIR POSITION WHEN EVERY DRONE IS ON POSITION
     'drones_height': 40,  # m
 
     # Initial data for antenna
@@ -60,11 +61,13 @@ class DronesProject:
         self.user_mobility = ReferencePointGroupMobility
 
     def start(self, pso, kmeans):
+        gitime = time.time()
         user_control = UserControl(self.user_mobility, self.parameters)
         self.users = user_control.simulation()
         self.groups = user_control.get_groups()
-
+        print("Time of users:", time.time() - gitime)
         if pso:
+            gptime = time.time()
             drone_control = DroneControl(PSO, self.users, self.parameters)
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
@@ -72,7 +75,9 @@ class DronesProject:
             self.coverage_pso = drone_control.get_coverage()
             self.coverage_twice_pso = drone_control.get_twice_coverage()
             self.coverage = np.copy(self.coverage_pso)
+            print("Time of pso:", time.time() - gptime)
         if kmeans:
+            gktime = time.time()
             drone_control = DroneControl(KMeans, self.users, self.parameters)
             self.drones = drone_control.simulation()
             self.drones_paths = drone_control.get_paths()
@@ -80,6 +85,7 @@ class DronesProject:
             self.coverage_kmeans = drone_control.get_coverage()
             self.coverage_twice_kmeans = drone_control.get_twice_coverage()
             self.coverage = np.copy(self.coverage_kmeans)
+            print("Time of km:", time.time() - gktime)
 
     def get_coverage(self):
         return self.coverage_pso, self.coverage_kmeans
@@ -107,7 +113,7 @@ def main():
     simulation = DronesProject(simulation_params)
     simulation.start(pso=pso, kmeans=kmeans)
     if visual:
-        simulation.visualize(save=False)
+        simulation.visualize(save=True)
 
 
 if __name__ == '__main__':
